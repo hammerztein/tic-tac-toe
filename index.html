@@ -12,9 +12,49 @@
 			rel="stylesheet" />
 	</head>
 	<body>
-		<header>
-			<h1>Tic-Tac-Toe</h1>
-		</header>
+		<dialog>
+			<form action="">
+				<div class="form-control">
+					<label for="player-one">Player One Name: </label>
+					<input
+						type="text"
+						name="player-one"
+						id="player-one"
+						required
+						placeholder="John"
+						minlength="2" />
+				</div>
+				<div class="form-control">
+					<label for="player-two">Player One Name: </label>
+					<input
+						type="text"
+						name="player-two"
+						id="player-two"
+						required
+						placeholder="Michael"
+						minlength="2" />
+				</div>
+				<button type="submit">Start Game</button>
+			</form>
+		</dialog>
+		<main class="container">
+			<header>
+				<h1>Tic-Tac-Toe</h1>
+				<p>Round <span id="round-number">2</span></p>
+			</header>
+			<section id="game"></section>
+			<section class="game-info">
+				<div class="game-scores">
+					<p>Player1 <span>1</span></p>
+					<p id="game-status">Player 1 Won!</p>
+					<p>Player2 <span>0</span></p>
+				</div>
+				<div class="game-buttons">
+					<button type="button">Next Round</button>
+					<button type="button">Restart Game</button>
+				</div>
+			</section>
+		</main>
 		<script src="./script.js"></script>
 	</body>
 </html>
