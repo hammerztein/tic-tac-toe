@@ -66,7 +66,7 @@ const GameController = (() => {
 	let playerOne = null;
 	let playerTwo = null;
 	// Store current player
-	let activePlayer = null;
+	let activePlayer = playerOne;
 	// Store winner
 	let winnerText = null;
 	// Keep track of game status
@@ -78,8 +78,6 @@ const GameController = (() => {
 	const startGame = (playerOneName, playerTwoName) => {
 		// Set game state to active
 		isGameActive = true;
-		// Create empty board
-		Gameboard.createBoard();
 		// Create players
 		playerOne = Player(playerOneName, 'X');
 		playerTwo = Player(playerTwoName, 'O');
@@ -185,8 +183,19 @@ const GameController = (() => {
 		isGameActive = true;
 		// Reset round
 		round = 0;
+		// Create new board
+		Gameboard.createBoard();
 		// Start game as new
 		startGame(playerOneName, playerTwoName);
+	};
+
+	//
+	const getGameInfo = () => {
+		return {
+			activePlayer,
+			round,
+			isGameActive,
+		};
 	};
 
 	return {
@@ -194,5 +203,26 @@ const GameController = (() => {
 		startGame,
 		playNextRound,
 		resetGame,
+		getGameInfo,
 	};
+})();
+
+const DisplayController = (() => {
+	// Display modal on the first render of the screen
+	const modal = document.querySelector('dialog').showModal();
+	// Draw a game board
+	const drawBoard = () => {
+		const gameboardEl = document.querySelector('#game');
+		// Create empty board
+		Gameboard.createBoard();
+		// Fill UI with cells
+		Gameboard.getBoard().forEach((cell, index) => {
+			const cellEl = document.createElement('button');
+			cellEl.className = 'cell';
+			cellEl.dataset.position = index;
+			gameboardEl.appendChild(cellEl);
+		});
+	};
+
+	drawBoard();
 })();
