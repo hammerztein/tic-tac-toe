@@ -98,7 +98,7 @@ header p  {
 }
 
 .container {
-	max-width: 400px;
+	width: min(450px, 100%);
 	margin: 0 auto;
 }
 
@@ -115,6 +115,11 @@ header p  {
 .cell {
 	border: 1px solid var(--light);
 	transition: var(--transition);
+	font-size: clamp(50px, 15vw, 100px);
+}
+
+.cell:disabled {
+	pointer-events: none;
 }
 
 .cell:hover {
