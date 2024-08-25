@@ -52,6 +52,11 @@ form {
 	gap: 22px;
 }
 
+form h3 {
+	text-align: center;
+	text-transform: uppercase;
+}
+
 .form-control {
 	display: flex;
 	align-items: center;
