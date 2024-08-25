@@ -66,15 +66,12 @@ const GameController = (() => {
 	let playerOne = null;
 	let playerTwo = null;
 	// Store current player
-	let activePlayer = playerOne;
-	// Store winner
-	let winnerText = null;
+	let activePlayer = null;
 	// Keep track of game status
 	let isGameActive = false;
 	// Keep track of rounds
 	let round = 0;
 
-	// Methods
 	const startGame = (playerOneName, playerTwoName) => {
 		// Set game state to active
 		isGameActive = true;
@@ -86,25 +83,27 @@ const GameController = (() => {
 	};
 
 	const switchPlayer = () => {
-		console.log(activePlayer.getTicker(), activePlayer.getName());
 		activePlayer === playerOne
 			? (activePlayer = playerTwo)
 			: (activePlayer = playerOne);
-		console.log(activePlayer.getTicker(), activePlayer.getName());
 	};
 
 	const playTurn = (cell) => {
 		// If game is not active return
 		if (!isGameActive) return;
-		// Print whos turn to the console
-		console.log(`It's ${activePlayer.getName()}s turn`);
 		// Move player to desired cell
 		Gameboard.movePlayer(activePlayer.getTicker(), cell);
 		// Check for winner
 		if (checkWinner()) {
-			round++;
 			isGameActive = false;
-			return;
+			round++;
+			activePlayer.addScore();
+			return `Winner is ${activePlayer.getName()}`;
+		}
+		if (checkTie()) {
+			isGameActive = false;
+			round++;
+			return "It's a tie!";
 		}
 		switchPlayer();
 	};
@@ -122,16 +121,15 @@ const GameController = (() => {
 			if (
 				condition.every((position) => activePlayerPositions.includes(position))
 			) {
-				// Increment score
-				activePlayer.addScore();
-				// Set winner text
-				winnerText = `Winner is ${activePlayer.getName()}`;
 				return true;
 			}
 		}
+		return false;
+	};
+
+	const checkTie = () => {
 		// If there are no more empty cells it's a tie
 		if (Gameboard.getBoard().filter((cell) => cell !== null).length === 9) {
-			winnerText = "It's a tie!";
 			return true;
 		}
 		return false;
@@ -151,183 +149,154 @@ const GameController = (() => {
 		return positions;
 	};
 
-	// Play next round
-	const playNextRound = () => {
-		// Set game to be active
+	const nextRound = () => {
 		isGameActive = true;
-		// Create new board
+		activePlayer = playerOne;
 		Gameboard.createBoard();
 	};
 
-	const resetGame = (playerOneName, playerTwoName) => {
-		// Set game to be active
-		isGameActive = true;
-		// Reset round
-		round = 0;
-		// Create new board
-		Gameboard.createBoard();
-		// Start game as new
-		startGame(playerOneName, playerTwoName);
-	};
-
-	//
 	const getGameInfo = () => {
 		return {
 			activePlayer,
 			round,
 			isGameActive,
-			winnerText,
+			playerOne,
+			playerTwo,
 		};
 	};
 
 	return {
 		playTurn,
 		startGame,
-		playNextRound,
-		resetGame,
 		getGameInfo,
+		nextRound,
 	};
 })();
 
 const DisplayController = (() => {
-	// Cache all DOM elements
-	const domElements = {
-		modal: {
-			container: document.querySelector('dialog'),
-			playerOneInput: document.querySelector('dialog #player-one'),
-			playerTwoInput: document.querySelector('dialog #player-two'),
-			startGameBtn: document.querySelector('dialog form button'),
-		},
-		game: {
-			board: document.querySelector('#game'),
-			roundText: document.querySelector('#round-number'),
-			playerOneName: document.querySelector('#player-one-name'),
-			playerOneScore: document.querySelector('#player-one-score'),
-			playerTwoName: document.querySelector('#player-two-name'),
-			playerTwoScore: document.querySelector('#player-two-score'),
-			gameStatus: document.querySelector('#game-status'),
-			nextRoundBtn: document.querySelector('#next-round'),
-			restartGameBtn: document.querySelector('#restart-game'),
-		},
+	// DOM
+	const modal = document.querySelector('dialog');
+	const playerOneInput = modal.querySelector('#player-one');
+	const playerTwoInput = modal.querySelector('#player-two');
+	const startGameBtn = modal.querySelector('form button');
+	const gameboardEl = document.querySelector('#game');
+	const playerOneName = document.querySelector('#player-one-name');
+	const playerOneScore = document.querySelector('#player-one-score');
+	const playerTwoName = document.querySelector('#player-two-name');
+	const playerTwoScore = document.querySelector('#player-two-score');
+	const roundNumber = document.querySelector('#round-number');
+	const gameStatus = document.querySelector('#game-status');
+	const nextRoundBtn = document.querySelector('#next-round');
+	const restartBtn = document.querySelector('#restart-game');
+
+	const showModal = () => {
+		modal.showModal();
 	};
 
-	// Draw a game board
-	const drawBoard = () => {
-		// Create empty board
+	const startGame = (e) => {
+		// Gather player names
+		e.preventDefault();
+		if (!playerOneInput.value || !playerTwoInput.value) return;
+		// Create game
+		GameController.startGame(playerOneInput.value, playerTwoInput.value);
+		// Set initial Game UI
+		setUI();
+		// Create board
 		Gameboard.createBoard();
-		// Fill UI with cells
-		Gameboard.getBoard().forEach((cell, index) => {
-			const cellEl = document.createElement('button');
-			cellEl.className = 'cell';
-			cellEl.dataset.position = index;
-			cellEl.removeAttribute('disabled');
-			domElements.game.board.appendChild(cellEl);
+		// Draw board
+		drawBoard();
+		// Clean up inputs
+		playerOneInput.value = '';
+		playerTwoInput.value = '';
+		// Close modal
+		modal.close();
+	};
+
+	const drawBoard = () => {
+		const board = Gameboard.getBoard();
+		if (gameboardEl.children.length > 0) {
+			gameboardEl.textContent = '';
+		}
+		// Draw board
+		board.forEach((cell, index) => {
+			const boardTile = document.createElement('button');
+			boardTile.className = 'cell';
+			// If cell has value, display it
+			if (cell) {
+				boardTile.textContent = cell;
+			}
+			boardTile.dataset.position = index;
+			gameboardEl.appendChild(boardTile);
 		});
 	};
 
-	const openModal = () => {
-		// Open modal
-		domElements.modal.container.showModal();
-		// Gather inputs
-		domElements.modal.startGameBtn.addEventListener('click', initializeGame);
+	const setUI = () => {
+		playerOneName.textContent =
+			GameController.getGameInfo().playerOne.getName();
+		playerTwoName.textContent =
+			GameController.getGameInfo().playerTwo.getName();
+		playerOneScore.textContent =
+			GameController.getGameInfo().playerOne.getScore();
+		playerTwoScore.textContent =
+			GameController.getGameInfo().playerTwo.getScore();
+		roundNumber.textContent = GameController.getGameInfo().round;
+		gameStatus.textContent = `It's ${GameController.getGameInfo().activePlayer.getName()}s turn`;
 	};
 
-	// Set player names gathered from modal
-	const initializeGame = (e) => {
-		e.preventDefault();
-		if (
-			!domElements.modal.playerOneInput.value ||
-			!domElements.modal.playerTwoInput.value
-		) {
-			return;
-		}
-		// Set player names
-		domElements.game.playerOneName.textContent =
-			domElements.modal.playerOneInput.value;
-		domElements.game.playerTwoName.textContent =
-			domElements.modal.playerTwoInput.value;
-
-		// Set game status
-		domElements.game.gameStatus.textContent = '';
-		// Set player scores
-		domElements.game.playerOneScore.textContent = 0;
-		domElements.game.playerTwoScore.textContent = 0;
-		// Set round
-		domElements.game.roundText.textContent = 1;
-		// Empty player inputs
-		domElements.modal.playerOneInput.value = '';
-		domElements.modal.playerTwoInput.value = '';
-
-		domElements.modal.container.close();
-		startGame();
-	};
-
-	// Start the game and gather player names
-	const startGame = () => {
-		drawBoard();
-		// Start game
-		GameController.startGame(
-			domElements.game.playerOneName.textContent,
-			domElements.game.playerTwoName.textContent,
-		);
-		// Attach board event listener
-		domElements.game.board.addEventListener('click', playGame);
-	};
-
-	const playGame = (e) => {
-		// Dont play if game is not active
-		if (!GameController.getGameInfo().isGameActive) {
-			return;
-		}
+	const playTurn = (e) => {
 		const cell = e.target;
+		// Turn validation
 		if (!cell.matches('.cell')) return;
-		if (cell.textContent !== '') return;
-		const position = cell.dataset.position;
-		cell.textContent = GameController.getGameInfo().activePlayer.getTicker();
-		GameController.playTurn(position);
-		// If winner text is true there is a winner
-		if (GameController.getGameInfo().winnerText) {
-			updateRoundWinUI();
+		if (!GameController.getGameInfo().isGameActive) return;
+		const result = GameController.playTurn(cell.dataset.position);
+		// Re-render board
+		drawBoard();
+		// If result is true round has been concluded
+		if (result) {
+			// update Round UI
+			updateRoundUI(result);
+			return;
+		}
+		// Update turn
+		updateTurnUI();
+	};
+
+	const updateTurnUI = () => {
+		// Display whos turn it is
+		gameStatus.textContent = ` It's ${GameController.getGameInfo().activePlayer.getName()}s turn`;
+	};
+
+	const updateRoundUI = (winner) => {
+		gameStatus.textContent = winner;
+		if (
+			GameController.getGameInfo().activePlayer.getName() ===
+			playerOneName.textContent
+		) {
+			playerOneScore.textContent =
+				GameController.getGameInfo().activePlayer.getScore();
+		} else {
+			playerTwoScore.textContent =
+				GameController.getGameInfo().activePlayer.getScore();
 		}
 	};
 
-	/*
-		Update UI
-			Get game info and update UI elements
-	*/
-	const updateRoundWinUI = () => {
-		domElements.game.playerOneScore.textContent =
-			GameController.getGameInfo().activePlayer.getScore();
-		domElements.game.gameStatus.textContent =
-			GameController.getGameInfo().winnerText;
+	const playNextRound = () => {
+		GameController.nextRound();
+		drawBoard();
+		setUI();
 	};
 
-	/*
-		Handle event
-			Play a round of a game
-				Use dataset-position as cell to play round
-			Update UI
-	*/
+	const restartGame = () => {
+		showModal();
+	};
 
-	/*
-		Round end
-			Display winner text and update score for winner 
-			Disable all cells
-	*/
+	const attachEventListeners = () => {
+		startGameBtn.addEventListener('click', startGame);
+		gameboardEl.addEventListener('click', playTurn);
+		nextRoundBtn.addEventListener('click', playNextRound);
+		restartBtn.addEventListener('click', restartGame);
+	};
 
-	/*
-		Play next round
-			Attach event listener that will play next round
-			Redraw board
-	*/
-
-	/*
-		Restart game
-			Get user input via modal
-			Close modal
-			Call reset game
-			Call draw board
-	*/
-
-	openModal();
+	showModal();
+	attachEventListeners();
 })();
