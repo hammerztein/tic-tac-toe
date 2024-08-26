@@ -67,15 +67,15 @@ form h3 {
 	padding: 4px 8px;
 	border-radius: 4px;
 	background-color: var(--light);
-	border: 1px solid var(--light);
+	border: 3px solid #fff;
 }
 
 .form-control input:not(:placeholder-shown):valid {
-	border: 1px solid #4ade80;
+	border: 3px solid #4ade80;
 }
 
 .form-control input:not(:placeholder-shown):invalid {
-	border: 1px solid #f87171;
+	border: 3px solid #f87171;
 }
 
 form button {
@@ -123,7 +123,7 @@ header p  {
 	font-size: clamp(50px, 15vw, 100px);
 }
 
-.cell:disabled {
+.cell.disabled {
 	pointer-events: none;
 }
 
@@ -131,15 +131,33 @@ header p  {
 	background-color: #dadada;
 }
 
+.cell.winner {
+	background-color: #60a5fa;
+}
+
 .game-scores {
 	display: flex;
 	justify-content: space-around;
 	margin-bottom: 20px;
+	gap: 8px;
+}
+
+.player {
+	display: flex;
+	justify-content: center;
+	gap: 12px;
+	border-radius: 4px;
+	padding: 8px;
+	flex: 1;
+}
+
+.player.active {
+	background-color: #fb923c;
 }
 
 .game-buttons {
 	display: flex;
-	justify-content: space-around;
+	justify-content: space-evenly;
 }
 
 .game-buttons button {
