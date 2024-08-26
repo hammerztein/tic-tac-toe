@@ -21,7 +21,6 @@ const Gameboard = (() => {
 	// Store game board
 	const board = [];
 
-	// Method to create game board
 	const createBoard = () => {
 		// Clean up game board
 		board.splice(0, board.length);
@@ -31,14 +30,11 @@ const Gameboard = (() => {
 		}
 	};
 
-	// Method to expose private game board array
 	const getBoard = () => board;
 
-	// Methods to move player to specified cell
 	const movePlayer = (playerTicker, cell) => {
 		// If current cell has value, it is occupied
 		if (board[cell] !== null) return;
-		// Set current index of array to equal player ticker
 		board[cell] = playerTicker;
 	};
 
@@ -62,16 +58,11 @@ const GameController = (() => {
 		[6, 7, 8], // Bottom row
 	];
 
-	// Players
 	let playerOne = null;
 	let playerTwo = null;
-	// Store current player
 	let activePlayer = null;
-	// Keep track of game status
 	let isGameActive = false;
-	// Keep track of rounds
 	let round = 1;
-	// Keep track of winning combination
 	let winnerCombo = null;
 
 	const startGame = (playerOneName, playerTwoName) => {
@@ -99,7 +90,6 @@ const GameController = (() => {
 		if (!isGameActive) return;
 		// Move player to desired cell
 		Gameboard.movePlayer(activePlayer.getTicker(), cell);
-		// Check for winner
 		if (checkWinner()) {
 			isGameActive = false;
 			round++;
@@ -115,7 +105,7 @@ const GameController = (() => {
 	};
 
 	const checkWinner = () => {
-		// If board has less than non-empty values there can not be a winner
+		// If board has less than 5 non-empty values there can not be a winner
 		if (Gameboard.getBoard().filter((cell) => cell !== null).length < 5)
 			return false;
 
@@ -127,6 +117,7 @@ const GameController = (() => {
 			if (
 				condition.every((position) => activePlayerPositions.includes(position))
 			) {
+				// Assign winner combination
 				winnerCombo = condition;
 				return true;
 			}
@@ -157,6 +148,7 @@ const GameController = (() => {
 	};
 
 	const nextRound = () => {
+		// Reset game variables
 		isGameActive = true;
 		activePlayer = playerOne;
 		winnerCombo = null;
@@ -242,6 +234,7 @@ const DisplayController = (() => {
 	};
 
 	const setUI = () => {
+		// Player one is always starting player
 		playerContainers[0].classList.add('active');
 		playerContainers[1].classList.remove('active');
 		nextRoundBtn.textContent = 'Restart Round';
@@ -264,7 +257,7 @@ const DisplayController = (() => {
 		if (!cell.matches('.cell')) return;
 		if (!GameController.getGameInfo().isGameActive) return;
 		const result = GameController.playTurn(cell.dataset.position);
-		// Re-render board
+		// Update board
 		drawBoard();
 		// If result is true round has been concluded
 		if (result) {
@@ -282,6 +275,7 @@ const DisplayController = (() => {
 		GameController.getGameInfo().winnerCombo.forEach((combo) => {
 			cells[combo].classList.add('winner');
 		});
+		// Remove pointer events
 		cells.forEach((cell) => cell.classList.add('disabled'));
 	};
 
@@ -292,7 +286,7 @@ const DisplayController = (() => {
 	};
 
 	const updateTurnUI = () => {
-		// Display whos turn it is
+		// Display whose turn it is
 		gameStatus.textContent = ` It's ${GameController.getGameInfo().activePlayer.getName()}s turn`;
 		highlightPlayer();
 	};
