@@ -70,7 +70,9 @@ const GameController = (() => {
 	// Keep track of game status
 	let isGameActive = false;
 	// Keep track of rounds
-	let round = 0;
+	let round = 1;
+	// Keep track of winning combination
+	let winnerCombo = null;
 
 	const startGame = (playerOneName, playerTwoName) => {
 		// Set game state to active
@@ -80,6 +82,10 @@ const GameController = (() => {
 		playerTwo = Player(playerTwoName, 'O');
 		// Set first player as active
 		activePlayer = playerOne;
+		// Set starting round
+		round = 1;
+		// Reset Combo
+		winnerCombo = null;
 	};
 
 	const switchPlayer = () => {
@@ -121,6 +127,7 @@ const GameController = (() => {
 			if (
 				condition.every((position) => activePlayerPositions.includes(position))
 			) {
+				winnerCombo = condition;
 				return true;
 			}
 		}
@@ -152,11 +159,13 @@ const GameController = (() => {
 	const nextRound = () => {
 		isGameActive = true;
 		activePlayer = playerOne;
+		winnerCombo = null;
 		Gameboard.createBoard();
 	};
 
 	const getGameInfo = () => {
 		return {
+			winnerCombo,
 			activePlayer,
 			round,
 			isGameActive,
@@ -184,6 +193,7 @@ const DisplayController = (() => {
 	const playerOneScore = document.querySelector('#player-one-score');
 	const playerTwoName = document.querySelector('#player-two-name');
 	const playerTwoScore = document.querySelector('#player-two-score');
+	const playerContainers = document.querySelectorAll('.player');
 	const roundNumber = document.querySelector('#round-number');
 	const gameStatus = document.querySelector('#game-status');
 	const nextRoundBtn = document.querySelector('#next-round');
@@ -214,6 +224,7 @@ const DisplayController = (() => {
 
 	const drawBoard = () => {
 		const board = Gameboard.getBoard();
+		// If board element not empty, clear it out
 		if (gameboardEl.children.length > 0) {
 			gameboardEl.textContent = '';
 		}
@@ -231,8 +242,12 @@ const DisplayController = (() => {
 	};
 
 	const setUI = () => {
+		playerContainers[0].classList.add('active');
+		playerContainers[1].classList.remove('active');
+		nextRoundBtn.textContent = 'Restart Round';
 		playerOneName.textContent =
 			GameController.getGameInfo().playerOne.getName();
+		playerOneName.classList.add('active');
 		playerTwoName.textContent =
 			GameController.getGameInfo().playerTwo.getName();
 		playerOneScore.textContent =
@@ -255,15 +270,31 @@ const DisplayController = (() => {
 		if (result) {
 			// update Round UI
 			updateRoundUI(result);
+			highlightWinningCells();
 			return;
 		}
 		// Update turn
 		updateTurnUI();
 	};
 
+	const highlightWinningCells = () => {
+		const cells = gameboardEl.querySelectorAll('.cell');
+		GameController.getGameInfo().winnerCombo.forEach((combo) => {
+			cells[combo].classList.add('winner');
+		});
+		cells.forEach((cell) => cell.classList.add('disabled'));
+	};
+
+	const highlightPlayer = () => {
+		playerContainers.forEach((container) =>
+			container.classList.toggle('active'),
+		);
+	};
+
 	const updateTurnUI = () => {
 		// Display whos turn it is
 		gameStatus.textContent = ` It's ${GameController.getGameInfo().activePlayer.getName()}s turn`;
+		highlightPlayer();
 	};
 
 	const updateRoundUI = (winner) => {
@@ -278,6 +309,7 @@ const DisplayController = (() => {
 			playerTwoScore.textContent =
 				GameController.getGameInfo().activePlayer.getScore();
 		}
+		nextRoundBtn.textContent = 'Next Round';
 	};
 
 	const playNextRound = () => {
