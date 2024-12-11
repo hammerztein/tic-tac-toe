@@ -34,8 +34,8 @@ const Gameboard = (() => {
 
 	const movePlayer = (playerTicker, cell) => {
 		// If current cell has value, it is occupied
-		if (board[cell] !== null) return;
-		board[cell] = playerTicker;
+		if (board[cell] !== null) return false;
+		return (board[cell] = playerTicker);
 	};
 
 	return {
@@ -89,7 +89,10 @@ const GameController = (() => {
 		// If game is not active return
 		if (!isGameActive) return;
 		// Move player to desired cell
-		Gameboard.movePlayer(activePlayer.getTicker(), cell);
+		if (Gameboard.movePlayer(activePlayer.getTicker(), cell) === false) {
+			// If cell already occupied cancel playTurn
+			return false;
+		}
 		if (checkWinner()) {
 			isGameActive = false;
 			round++;
@@ -262,7 +265,7 @@ const DisplayController = (() => {
 		// If result is true round has been concluded
 		if (result) {
 			// update Round UI
-			updateRoundUI(result);
+			updateRoundUI();
 			highlightWinningCells();
 			return;
 		}
@@ -279,16 +282,24 @@ const DisplayController = (() => {
 		cells.forEach((cell) => cell.classList.add('disabled'));
 	};
 
-	const highlightPlayer = () => {
-		playerContainers.forEach((container) =>
-			container.classList.toggle('active'),
-		);
+	const highlightPlayer = (player) => {
+		playerContainers.forEach((container) => {
+			container.classList.remove('active');
+		});
+
+		if (playerOneName.textContent === player) {
+			playerOneName.parentElement.classList.add('active');
+		} else {
+			playerTwoName.parentElement.classList.add('active');
+		}
 	};
 
 	const updateTurnUI = () => {
+		const activePlayerName =
+			GameController.getGameInfo().activePlayer.getName();
 		// Display whose turn it is
-		gameStatus.textContent = ` It's ${GameController.getGameInfo().activePlayer.getName()}s turn`;
-		highlightPlayer();
+		gameStatus.textContent = ` It's ${activePlayerName}s turn`;
+		highlightPlayer(activePlayerName);
 	};
 
 	const updateRoundUI = (winner) => {
